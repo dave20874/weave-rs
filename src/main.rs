@@ -2,9 +2,8 @@ use iced::executor;
 use iced::{Application, Command, Element, Settings, Theme, Color, Rectangle};
 use iced_aw::number_input::NumberInput;
 
-use iced::widget::{column, row, text, toggler, pick_list };
-use iced::widget::canvas;
-use iced::widget::canvas::{Canvas, Program, Path};
+use iced::widget::{column, row, text, toggler, pick_list, canvas };
+use iced::widget::canvas::{Canvas, Program, Path, Cursor, Geometry, Frame};
 use iced::widget::{Container};
 use std::fmt::Formatter;
 use std::fmt::Error;
@@ -179,20 +178,19 @@ impl Weave {
             .into()
     }
 
-
     fn planar_view(&self) -> Element<Message> {
         // return a container with a canvas.
         // &self is passed as the program param to the canvas so the draw() method will draw stuff on it.
         Container::new(
             column![]
-                .push(canvas(self).into())
-
+                .spacing(20)
+                // .push(Canvas::new(self))
         )
             .into()
     }
 }
 
-
+/*
 // Then, we implement the `Program` trait
 impl Program<()> for Weave {
     type State = ();
@@ -211,7 +209,7 @@ impl Program<()> for Weave {
         vec![frame.into_geometry()]
     }
 }
-
+*/
 
 impl Application for Weave {
     type Executor = executor::Default;
