@@ -1,9 +1,9 @@
 use iced::executor;
-use iced::{Application, Command, Element, Settings, Theme, Color, Rectangle, Length};
+use iced::{Application, Command, Element, Settings, Theme, Color, Rectangle, Length, Point, Size};
 use iced_aw::number_input::NumberInput;
 
-use iced::widget::{column, row, text, toggler, pick_list, canvas };
-use iced::widget::canvas::{Canvas, Program, Path, Cursor, Geometry, Frame};
+use iced::widget::{column, row, pick_list };
+use iced::widget::canvas::{Canvas, Program, Path, Cursor, Geometry, Frame, Stroke};
 use iced::widget::{Container};
 use std::fmt::Formatter;
 use std::fmt::Error;
@@ -77,12 +77,31 @@ impl Display for StartMeshPlanar {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum StartMeshSpherical {
     Cube,
     Dodecahedron,
     Icosohedron,
     TruncatedIcosohedron,
+}
+
+impl Display for StartMeshSpherical {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
+        match &self {
+            StartMeshSpherical::Cube => {
+                write!(f, "Cube")
+            },
+            StartMeshSpherical::Dodecahedron => {
+                write!(f, "Dodecahedron")
+            },
+            StartMeshSpherical::Icosohedron => {
+                write!(f, "Icosohedron")
+            },
+            StartMeshSpherical::TruncatedIcosohedron => {
+                write!(f, "Truncated icosohedron")
+            },
+        } 
+    }
 }
 
 impl StartMeshSpherical {
@@ -98,16 +117,15 @@ impl StartMeshSpherical {
 struct Weave {
     surface: Surface,
     start_mesh_planar: StartMeshPlanar,
-    // start_mesh_sphere: StartMeshSpherical,
+    start_mesh_sphere: StartMeshSpherical,
     iterations: usize,
-    views: usize,
 }
 
 #[derive(Debug, Clone)]
 enum Message {
     SetSurface(Surface),
     SetStartMeshPlanar(StartMeshPlanar),
-    // SetStartMeshSpherical(StartMeshSpherical),
+    SetStartMeshSpherical(StartMeshSpherical),
     SetIterations(usize),
 }
 
@@ -132,11 +150,22 @@ impl Weave {
     }
 
     fn initial_shape_control(&self) -> Element<Message> {
-        let pick_list = pick_list(
-            &StartMeshPlanar::ALL[..],
-            Some(self.start_mesh_planar),
-            Message::SetStartMeshPlanar,
-        );
+        let pick_list: Element<Message> = match self.surface {
+            Surface::Plane => {
+                pick_list(
+                    &StartMeshPlanar::ALL[..],
+                    Some(self.start_mesh_planar),
+                    Message::SetStartMeshPlanar,
+                ).into()
+            }
+            Surface::Sphere => {
+                pick_list(
+                    &StartMeshSpherical::ALL[..],
+                    Some(self.start_mesh_sphere),
+                    Message::SetStartMeshSpherical,
+                ).into()
+            }
+        };
 
         let content = column![
             "Initial mesh:",
@@ -201,6 +230,12 @@ impl Program<Message, Theme> for Weave {
         // And fill it with some color
         frame.fill(&circle, Color::BLACK);
 
+        let stroke = Stroke::default()
+            .with_color(Color::from_rgb(0.0, 0.0, 1.0))  // Red
+            .with_width(5.0);                                              // Width: 5
+        let square = Path::rectangle(Point::new(100.0, 100.0), Size::new(100.0, 100.0));
+        frame.stroke(&square, stroke);
+
         // Finally, we produce the geometry
         vec![frame.into_geometry()]
     }
@@ -217,9 +252,8 @@ impl Application for Weave {
             Weave {
                 surface: Surface::Plane,
                 start_mesh_planar: StartMeshPlanar::Pentagon,
-                // start_mesh_spherical: StartMeshSpherical::Dodecahedron,
+                start_mesh_sphere: StartMeshSpherical::Dodecahedron,
                 iterations: 2,
-                views: 0,
             }, 
             Command::none()
         )
@@ -239,6 +273,9 @@ impl Application for Weave {
             }
             Message::SetStartMeshPlanar(start_mesh_planar) => {
                 self.start_mesh_planar = start_mesh_planar;
+            }
+            Message::SetStartMeshSpherical(start_mesh_sphere) => {
+                self.start_mesh_sphere = start_mesh_sphere;
             }
         }
 
