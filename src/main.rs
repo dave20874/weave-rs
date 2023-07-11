@@ -1,5 +1,5 @@
 use iced::executor;
-use iced::{Application, Command, Element, Settings, Theme, Color, Rectangle};
+use iced::{Application, Command, Element, Settings, Theme, Color, Rectangle, Length};
 use iced_aw::number_input::NumberInput;
 
 use iced::widget::{column, row, text, toggler, pick_list, canvas };
@@ -179,20 +179,16 @@ impl Weave {
     }
 
     fn planar_view(&self) -> Element<Message> {
-        // return a container with a canvas.
-        // &self is passed as the program param to the canvas so the draw() method will draw stuff on it.
-        Container::new(
-            column![]
-                .spacing(20)
-                // .push(Canvas::new(self))
-        )
+        // return a canvas.
+        Canvas::new(self)
+            .width(Length::Fill)
+            .height(Length::Fill)
             .into()
     }
 }
 
-/*
 // Then, we implement the `Program` trait
-impl Program<()> for Weave {
+impl Program<Message, Theme> for Weave {
     type State = ();
 
     fn draw(&self, _state: &(), _theme: &Theme, bounds: Rectangle, _cursor: Cursor) -> Vec<Geometry>{
@@ -200,7 +196,7 @@ impl Program<()> for Weave {
         let mut frame = Frame::new(bounds.size());
 
         // We create a `Path` representing a simple circle
-        let circle = Path::circle(frame.center(), 100);
+        let circle = Path::circle(frame.center(), 100.0);
 
         // And fill it with some color
         frame.fill(&circle, Color::BLACK);
@@ -209,7 +205,6 @@ impl Program<()> for Weave {
         vec![frame.into_geometry()]
     }
 }
-*/
 
 impl Application for Weave {
     type Executor = executor::Default;
