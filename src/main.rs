@@ -1,3 +1,5 @@
+mod mesh;
+
 use iced::executor;
 use iced::{Application, Command, Element, Settings, Theme, Color, Rectangle, Length, Point, Size};
 use iced_aw::number_input::NumberInput;
@@ -8,6 +10,8 @@ use iced::widget::{Container};
 use std::fmt::Formatter;
 use std::fmt::Error;
 use std::fmt::Display;
+
+use mesh::Mesh2D;
 
 pub fn main() -> iced::Result {
     Weave::run(Settings::default())
@@ -214,12 +218,17 @@ impl Weave {
             .height(Length::Fill)
             .into()
     }
+
+    fn make_mesh(&self) -> Mesh2D {
+        Mesh2D::regular_polygon(5)  // TODO
+    }
 }
 
 // Then, we implement the `Program` trait
 impl Program<Message, Theme> for Weave {
     type State = ();
 
+        // TODO: This gets called every time mouse moves?  Do I need to optimize it?  Supress that?
     fn draw(&self, _state: &(), _theme: &Theme, bounds: Rectangle, _cursor: Cursor) -> Vec<Geometry>{
         // We prepare a new `Frame`
         let mut frame = Frame::new(bounds.size());
@@ -233,6 +242,14 @@ impl Program<Message, Theme> for Weave {
         let stroke = Stroke::default()
             .with_color(Color::from_rgb(0.0, 0.0, 1.0))  // Red
             .with_width(5.0);                                              // Width: 5
+
+        // create start mesh
+        let mesh = self.make_mesh();
+        println!("The mesh has {} polygons.", mesh.num_polygons());
+
+        // TODO: create an empty path
+        // TODO: for each polygon, do a move_to first coord, line_to each coord, line_to first coord.
+        // TODO: get rid of the square thing below and the circle above.
         let square = Path::rectangle(Point::new(100.0, 100.0), Size::new(100.0, 100.0));
         frame.stroke(&square, stroke);
 
