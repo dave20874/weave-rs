@@ -6,7 +6,7 @@ use iced::{Application, Command, Element, Settings, Theme, Color, Rectangle, Len
 use iced_aw::number_input::NumberInput;
 
 use iced::widget::{column, row, pick_list };
-use iced::widget::canvas::{Canvas, Program, Path, Cursor, Geometry, Frame, Stroke};
+use iced::widget::canvas::{Canvas, Program, Path, Cursor, Geometry, Frame, Stroke, LineJoin};
 use iced::widget::{Container};
 use std::fmt::Formatter;
 use std::fmt::Error;
@@ -263,7 +263,8 @@ impl Program<Message, Theme> for Weave {
 
         let stroke = Stroke::default()
         .with_color(Color::from_rgb(0.0, 0.0, 1.0))  // Blue
-        .with_width(5.0);  
+        .with_width(3.0)
+        .with_line_join(LineJoin::Round);
 
         frame.stroke(&poly_path, stroke);
 

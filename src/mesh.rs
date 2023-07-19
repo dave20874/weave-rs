@@ -45,7 +45,7 @@ impl Mesh2D {
                 let y = self.vertices[polygon[n]].y * scale_y + cy;
                 builder.line_to(Point{x, y});
             }
-            builder.line_to(Point{x:start_x, y:start_y});
+            builder.close();
         }
     }
 }
