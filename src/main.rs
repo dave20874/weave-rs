@@ -1,6 +1,7 @@
 mod mesh;
 
-use iced::executor;
+use iced::{executor, Vector};
+use iced::widget::canvas::path::Builder;
 use iced::{Application, Command, Element, Settings, Theme, Color, Rectangle, Length, Point, Size};
 use iced_aw::number_input::NumberInput;
 
@@ -220,7 +221,13 @@ impl Weave {
     }
 
     fn make_mesh(&self) -> Mesh2D {
-        Mesh2D::regular_polygon(5)  // TODO
+        match self.start_mesh_planar {
+            StartMeshPlanar::Square => Mesh2D::regular_polygon(4),
+            StartMeshPlanar::Pentagon => Mesh2D::regular_polygon(5),
+            StartMeshPlanar::Hexagon => Mesh2D::regular_polygon(6),
+            StartMeshPlanar::SquareGrid => Mesh2D::regular_polygon(9)
+        }
+        
     }
 }
 
@@ -230,28 +237,35 @@ impl Program<Message, Theme> for Weave {
 
         // TODO: This gets called every time mouse moves?  Do I need to optimize it?  Supress that?
     fn draw(&self, _state: &(), _theme: &Theme, bounds: Rectangle, _cursor: Cursor) -> Vec<Geometry>{
-        // We prepare a new `Frame`
-        let mut frame = Frame::new(bounds.size());
-
-        // We create a `Path` representing a simple circle
-        let circle = Path::circle(frame.center(), 100.0);
-
-        // And fill it with some color
-        frame.fill(&circle, Color::BLACK);
-
-        let stroke = Stroke::default()
-            .with_color(Color::from_rgb(0.0, 0.0, 1.0))  // Red
-            .with_width(5.0);                                              // Width: 5
 
         // create start mesh
         let mesh = self.make_mesh();
-        println!("The mesh has {} polygons.", mesh.num_polygons());
+        // println!("The mesh has {} polygons.", mesh.num_polygons());
 
-        // TODO: create an empty path
-        // TODO: for each polygon, do a move_to first coord, line_to each coord, line_to first coord.
-        // TODO: get rid of the square thing below and the circle above.
-        let square = Path::rectangle(Point::new(100.0, 100.0), Size::new(100.0, 100.0));
-        frame.stroke(&square, stroke);
+        // We prepare a new `Frame`
+        let mut frame = Frame::new(bounds.size());
+
+        // scale and translate the frame so (0, 0) is a the center, +X is right, +Y is up
+        // and the mesh fits inside 90% of the frame.
+        let scale_x: f32 = if (bounds.size().width > bounds.size().height) {
+            bounds.size().height/2.1
+        }
+        else {
+            bounds.size().width/2.1
+        };
+        let scale_y = -scale_x;
+        let cx = bounds.size().width/2 as f32;
+        let cy = bounds.size().height/2 as f32;
+
+        let poly_path = Path::new(|b| {
+            mesh.build(b, scale_x, scale_y, cx, cy);
+        });
+
+        let stroke = Stroke::default()
+        .with_color(Color::from_rgb(0.0, 0.0, 1.0))  // Blue
+        .with_width(5.0);  
+
+        frame.stroke(&poly_path, stroke);
 
         // Finally, we produce the geometry
         vec![frame.into_geometry()]
