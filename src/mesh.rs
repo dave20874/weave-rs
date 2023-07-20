@@ -71,12 +71,14 @@ impl Mesh2D {
                        vertices: &mut Vec<Point>, 
                        expanded_edges: &mut HashMap<(usize, usize), (usize, usize)>) 
                        -> (usize, usize) {
+        println!("Getting mid points of points {} and {}", points.0, points.1);
+
         // Keep track of whether we reversed the input points
         let mut reversed = false;
 
         let (p1, p2) = if points.0 <= points.1 {
             // don't reverse inputs
-            points
+            (points.0, points.1)
         }
         else {
             // reverse inputs
@@ -90,8 +92,29 @@ impl Mesh2D {
         }
         else {
             // These points haven't been generated yet so generate them
-            // TODO
-            (0, 0)
+            let p1_point = vertices[p1];
+            let p2_point = vertices[p2];
+            let r0 = (p2_point.x - p1_point.x).hypot(p2_point.y-p1_point.y);
+            let theta0 = (p2_point.y-p1_point.y).atan2(p2_point.x-p1_point.x);
+            let r_segment = r0 * 0.377964473;  // 1/sqrt(7)
+
+            let dx = r_segment*(theta0+0.33347).cos();
+            let dy = r_segment*(theta0+0.33347).sin();
+
+            let p3x = p1_point.x + dx;
+            let p3y = p1_point.y + dy;
+            let p4x = p2_point.x - dx;
+            let p4y = p2_point.y - dy;
+            let p3 = vertices.len();
+            let p4 = p3+1;
+
+            let new_ids = (vertices.len());
+
+            vertices.push(Point{x:p3x, y:p3y});
+            vertices.push(Point{x:p4x, y:p4y});
+            expanded_edges.insert((p1, p2), (p3, p4));
+
+            (p3, p4)
         };
 
         if reversed {
@@ -117,22 +140,25 @@ impl Mesh2D {
 
         // For each polygon in this mesh, create new polygons from it's edges
         for poly in &self.polygons {
+            let poly_len = poly.len();
+
             // Find center point, register it as a new vertex
             let (cx, cy) = self.find_poly_center(&poly);
             vertices.push(Point { x: cx, y: cy } );
-            let a = vertices.len();
+            let a = vertices.len()-1;
 
             // For each corner of this polygon
             for corner in 0..poly.len() {
                 // get index of next CCW corner
-                let cw = (corner-1) % poly.len();
-                let ccw = (corner+1) % poly.len();
+                let corner_pt = poly[corner];
+                let cw = poly[(corner + poly_len-1) % (poly.len())];
+                let ccw = poly[(corner +1) % (poly.len())];
                 // get indexes of points from CW to this corner
-                let (b, c) = Mesh2D::get_mid_pts((cw, corner), &mut vertices, &mut expanded_edges);
-                let (e, f) = Mesh2D::get_mid_pts((corner, ccw), &mut vertices, &mut expanded_edges);
+                let (b, c) = Mesh2D::get_mid_pts((cw, corner_pt), &mut vertices, &mut expanded_edges);
+                let (e, f) = Mesh2D::get_mid_pts((corner_pt, ccw), &mut vertices, &mut expanded_edges);
 
                 // record polygon from a (center) to b to c to d (corner) to e to a (center)
-                polygons.push(vec![a, b, c, corner, e]);
+                polygons.push(vec![a, b, c, corner_pt, e]);
 
                 // record mid_z segment from b to c
                 mid_z.push((b, c));

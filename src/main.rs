@@ -221,13 +221,18 @@ impl Weave {
     }
 
     fn make_mesh(&self) -> Mesh2D {
-        match self.start_mesh_planar {
+        let mut mesh = match self.start_mesh_planar {
             StartMeshPlanar::Square => Mesh2D::regular_polygon(4),
             StartMeshPlanar::Pentagon => Mesh2D::regular_polygon(5),
             StartMeshPlanar::Hexagon => Mesh2D::regular_polygon(6),
             StartMeshPlanar::SquareGrid => Mesh2D::regular_polygon(9)
-        }
+        };
         
+        for _ in 0..self.iterations {
+            mesh = mesh.penta_decomp();
+        }
+
+        mesh
     }
 }
 
