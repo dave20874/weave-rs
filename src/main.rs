@@ -285,7 +285,7 @@ impl Application for Weave {
                 surface: Surface::Plane,
                 start_mesh_planar: StartMeshPlanar::Pentagon,
                 start_mesh_sphere: StartMeshSpherical::Dodecahedron,
-                iterations: 2,
+                iterations: 0,
             }, 
             Command::none()
         )
