@@ -223,10 +223,10 @@ impl Weave {
 
     fn make_mesh(&self) -> Mesh2D {
         let mut mesh = match self.start_mesh_planar {
-            StartMeshPlanar::Square => Mesh2D::regular_polygon(4),
+            StartMeshPlanar::Square => Mesh2D::square_grid(1, 1),
             StartMeshPlanar::Pentagon => Mesh2D::regular_polygon(5),
             StartMeshPlanar::Hexagon => Mesh2D::regular_polygon(6),
-            StartMeshPlanar::SquareGrid => Mesh2D::regular_polygon(9)
+            StartMeshPlanar::SquareGrid => Mesh2D::square_grid(3, 3),
         };
         
         for _ in 0..self.iterations {
@@ -248,20 +248,23 @@ impl Program<Message, Theme> for Weave {
         let mesh = self.make_mesh();
         // println!("The mesh has {} polygons.", mesh.num_polygons());
 
+        let (min_x, min_y, max_x, max_y) = mesh.extents();
+
         // We prepare a new `Frame`
         let mut frame = Frame::new(bounds.size());
 
         // scale and translate the frame so (0, 0) is a the center, +X is right, +Y is up
         // and the mesh fits inside 90% of the frame.
         let scale_x: f32 = if bounds.size().width > bounds.size().height {
-            bounds.size().height/2.1
+            0.9 * bounds.size().height/(max_x - min_x)
         }
         else {
-            bounds.size().width/2.1
+            0.9 * bounds.size().width/(max_y - min_y)
         };
         let scale_y = -scale_x;
-        let cx = bounds.size().width/2 as f32;
-        let cy = bounds.size().height/2 as f32;
+
+        let cx = (bounds.size().width/2 as f32) - scale_x * (max_x + min_x)/2.0;
+        let cy = (bounds.size().height/2 as f32) -  scale_y * (max_y + min_y)/2.0;
 
         let poly_path = Path::new(|b| {
             mesh.build(b, scale_x, scale_y, cx, cy);

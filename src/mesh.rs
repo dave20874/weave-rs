@@ -29,6 +29,56 @@ impl Mesh2D {
         Mesh2D {vertices, polygons, _mid_z: mid_z}
     }
 
+    pub fn square_grid(cols: usize, rows: usize) -> Mesh2D {
+        assert!(cols > 0);
+        assert!(rows > 0);
+
+        let mut vertices: Vec<Point> = Vec::new();
+        let mut polygons: Vec<Vec<usize>> = Vec::new();
+
+        let mid_z: Vec<(usize, usize)> = Vec::new();
+
+        // create vertices
+        for y in 0..rows+1 {
+            for x in 0..cols+1 {
+                vertices.push(Point{x: x as f32, y: y as f32});
+            }
+        }
+
+        // create grid squares
+        for y in 0..rows {
+            for x in 0..rows {
+                let mut polygon: Vec<usize> = Vec::new();
+                let base_pt = x*(cols+1) + y;
+                polygon.push(base_pt);
+                polygon.push(base_pt+1);
+                polygon.push(base_pt+1+cols+1);
+                polygon.push(base_pt+cols+1);
+
+                polygons.push(polygon);
+            }
+        }
+        
+        Mesh2D {vertices, polygons, _mid_z: mid_z}
+    }
+
+    pub fn extents(&self) -> (f32, f32, f32, f32) {
+        let point0 = self.vertices[0];
+        let mut min_x = point0.x;
+        let mut max_x = point0.x;
+        let mut min_y = point0.y;
+        let mut max_y = point0.y;
+
+        for p in &self.vertices {
+            if p.x < min_x {min_x = p.x};
+            if p.x > max_x {max_x = p.x};
+            if p.y < min_y { min_y = p.y};
+            if p.y > max_y { max_y = p.y};
+        }
+
+        (min_x, min_y, max_x, max_y)
+    }
+
     pub fn build(&self, builder: &mut Builder, scale_x:f32, scale_y:f32, cx:f32, cy:f32) -> () {
 
         for polygon in &self.polygons {
