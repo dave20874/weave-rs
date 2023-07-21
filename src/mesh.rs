@@ -6,7 +6,7 @@ use iced::{widget::canvas::path::Builder, Point};
 pub struct Mesh2D {
     vertices: Vec<Point>,
     polygons: Vec<Vec<usize>>,  // a polygon is a vector of vertex indices.
-    mid_z: Vec<(usize, usize)>, // middle Z segments.
+    _mid_z: Vec<(usize, usize)>, // middle Z segments.
 }
 
 impl Mesh2D {
@@ -26,11 +26,7 @@ impl Mesh2D {
         }
         polygons.push(polygon);
 
-        Mesh2D {vertices, polygons, mid_z}
-    }
-
-    pub fn num_polygons(&self) -> usize {
-        self.polygons.len()
+        Mesh2D {vertices, polygons, _mid_z: mid_z}
     }
 
     pub fn build(&self, builder: &mut Builder, scale_x:f32, scale_y:f32, cx:f32, cy:f32) -> () {
@@ -70,7 +66,7 @@ impl Mesh2D {
     pub fn smooth(&mut self) -> &mut Mesh2D {
         // For each vertex, create a set (vector) of barycenters of adjacent faces.
         let mut neighbor_barycenters: Vec<Vec<(f32, f32)>> = Vec::new();
-        for p in 0..self.vertices.len() {
+        for _p in 0..self.vertices.len() {
             neighbor_barycenters.push(Vec::new());
         }
 
@@ -118,7 +114,7 @@ impl Mesh2D {
                        vertices: &mut Vec<Point>, 
                        expanded_edges: &mut HashMap<(usize, usize), (usize, usize)>) 
                        -> (usize, usize) {
-        println!("Getting mid points of points {} and {}", points.0, points.1);
+        // println!("Getting mid points of points {} and {}", points.0, points.1);
 
         // Keep track of whether we reversed the input points
         let mut reversed = false;
@@ -135,12 +131,12 @@ impl Mesh2D {
 
         let (p3, p4) = if expanded_edges.contains_key(&(p1, p2)) {
             // We already generated intermediate points for this edge
-            println!("Got mid points from cache.");
+            // println!("Got mid points from cache.");
             *expanded_edges.get(&(p1, p2)).unwrap()
         }
         else {
             // These points haven't been generated yet so generate them
-            println!("Computing mid points.");
+            // println!("Computing mid points.");
             let p1_point = vertices[p1];
             let p2_point = vertices[p2];
             let r0 = (p2_point.x - p1_point.x).hypot(p2_point.y-p1_point.y);
@@ -156,8 +152,6 @@ impl Mesh2D {
             let p4y = p2_point.y - dy;
             let p3 = vertices.len();
             let p4 = p3+1;
-
-            let new_ids = (vertices.len());
 
             vertices.push(Point{x:p3x, y:p3y});
             vertices.push(Point{x:p4x, y:p4y});
@@ -205,7 +199,7 @@ impl Mesh2D {
 
                 // get indexes of points from CW to this corner
                 let (b, c) = Mesh2D::get_mid_pts((cw, d), &mut vertices, &mut expanded_edges);
-                let (e, f) = Mesh2D::get_mid_pts((d, ccw), &mut vertices, &mut expanded_edges);
+                let (e, _f) = Mesh2D::get_mid_pts((d, ccw), &mut vertices, &mut expanded_edges);
 
                 // record polygon from a (center) to b to c to d (corner) to e to a (center)
                 polygons.push(vec![a, b, c, d, e]);
@@ -215,7 +209,7 @@ impl Mesh2D {
             }
         }
 
-        let mut m = Mesh2D {vertices, polygons, mid_z};
+        let mut m = Mesh2D {vertices, polygons, _mid_z: mid_z};
         m.smooth();
 
         m

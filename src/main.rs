@@ -1,13 +1,12 @@
 mod mesh;
 
-use iced::{executor, Vector};
-use iced::widget::canvas::path::Builder;
-use iced::{Application, Command, Element, Settings, Theme, Color, Rectangle, Length, Point, Size};
+use iced::executor;
+use iced::{Application, Command, Element, Settings, Theme, Color, Rectangle, Length};
 use iced_aw::number_input::NumberInput;
 
 use iced::widget::{column, row, pick_list };
 use iced::widget::canvas::{Canvas, Program, Path, Cursor, Geometry, Frame, Stroke, LineJoin};
-use iced::widget::{Container};
+use iced::widget::Container;
 use std::fmt::Formatter;
 use std::fmt::Error;
 use std::fmt::Display;
@@ -15,7 +14,9 @@ use std::fmt::Display;
 use mesh::Mesh2D;
 
 pub fn main() -> iced::Result {
-    Weave::run(Settings::default())
+    let mut s = Settings::default();
+    s.antialiasing = true;
+    Weave::run(s)
 }
 
 
@@ -252,7 +253,7 @@ impl Program<Message, Theme> for Weave {
 
         // scale and translate the frame so (0, 0) is a the center, +X is right, +Y is up
         // and the mesh fits inside 90% of the frame.
-        let scale_x: f32 = if (bounds.size().width > bounds.size().height) {
+        let scale_x: f32 = if bounds.size().width > bounds.size().height {
             bounds.size().height/2.1
         }
         else {
@@ -268,7 +269,7 @@ impl Program<Message, Theme> for Weave {
 
         let stroke = Stroke::default()
         .with_color(Color::from_rgb(0.0, 0.0, 1.0))  // Blue
-        .with_width(3.0)
+        .with_width(1.0)
         .with_line_join(LineJoin::Round);
 
         frame.stroke(&poly_path, stroke);
