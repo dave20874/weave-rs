@@ -67,6 +67,53 @@ impl Mesh2D {
         (cx, cy)
     }
 
+    pub fn smooth(&mut self) -> &mut Mesh2D {
+        // For each vertex, create a set (vector) of barycenters of adjacent faces.
+        let mut neighbor_barycenters: Vec<Vec<(f32, f32)>> = Vec::new();
+        for p in 0..self.vertices.len() {
+            neighbor_barycenters.push(Vec::new());
+        }
+
+        // For each face, compute it's barycenter and register this with each of its vertices
+        for poly in &self.polygons {
+            // Compute barycenter
+            let mut cx = 0.0;
+            let mut cy = 0.0;
+            let mut n = 0;
+
+            for p in poly {
+                let point = self.vertices[*p];
+                n += 1;
+                cx += point.x;
+                cy += point.y;
+            }
+            let barycenter = (cx/(n as f32), cy/(n as f32));
+
+            // Add this barycenter to each vertices list
+            for p in poly {
+                neighbor_barycenters[*p].push(barycenter);
+            }
+        }
+
+        // For each vertex, if it has 3 or more neighboring barycenters, average them and move the coordinate
+        // to that average point.
+        for p in 0..self.vertices.len() {
+            let num_barycenters = neighbor_barycenters[p].len();
+            if num_barycenters >= 3 {
+                let mut sum_x = 0.0;
+                let mut sum_y = 0.0;
+                for (x, y) in &neighbor_barycenters[p] {
+                    sum_x += x;
+                    sum_y += y;
+                }
+                self.vertices[p] = Point{x:sum_x/(num_barycenters as f32), y: sum_y/(num_barycenters as f32)};
+            }
+        }
+
+        self
+
+    }
+
     pub fn get_mid_pts(points: (usize, usize), 
                        vertices: &mut Vec<Point>, 
                        expanded_edges: &mut HashMap<(usize, usize), (usize, usize)>) 
@@ -88,10 +135,12 @@ impl Mesh2D {
 
         let (p3, p4) = if expanded_edges.contains_key(&(p1, p2)) {
             // We already generated intermediate points for this edge
+            println!("Got mid points from cache.");
             *expanded_edges.get(&(p1, p2)).unwrap()
         }
         else {
             // These points haven't been generated yet so generate them
+            println!("Computing mid points.");
             let p1_point = vertices[p1];
             let p2_point = vertices[p2];
             let r0 = (p2_point.x - p1_point.x).hypot(p2_point.y-p1_point.y);
@@ -150,21 +199,26 @@ impl Mesh2D {
             // For each corner of this polygon
             for corner in 0..poly.len() {
                 // get index of next CCW corner
-                let corner_pt = poly[corner];
+                let d = poly[corner];
                 let cw = poly[(corner + poly_len-1) % (poly.len())];
                 let ccw = poly[(corner +1) % (poly.len())];
+
                 // get indexes of points from CW to this corner
-                let (b, c) = Mesh2D::get_mid_pts((cw, corner_pt), &mut vertices, &mut expanded_edges);
-                let (e, f) = Mesh2D::get_mid_pts((corner_pt, ccw), &mut vertices, &mut expanded_edges);
+                let (b, c) = Mesh2D::get_mid_pts((cw, d), &mut vertices, &mut expanded_edges);
+                let (e, f) = Mesh2D::get_mid_pts((d, ccw), &mut vertices, &mut expanded_edges);
 
                 // record polygon from a (center) to b to c to d (corner) to e to a (center)
-                polygons.push(vec![a, b, c, corner_pt, e]);
+                polygons.push(vec![a, b, c, d, e]);
 
                 // record mid_z segment from b to c
                 mid_z.push((b, c));
             }
         }
 
-        Mesh2D {vertices, polygons, mid_z}
+        let mut m = Mesh2D {vertices, polygons, mid_z};
+        m.smooth();
+
+        m
+
     }
 }
