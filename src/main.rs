@@ -184,7 +184,7 @@ impl Weave {
     }
 
     fn iter_controls(&self) -> Element<Message> {
-        let input = NumberInput::new(self.iterations, 10, Message::SetIterations);
+        let input = NumberInput::new(self.iterations, 7, Message::SetIterations);
 
         let content = column![
             "Iterations",
