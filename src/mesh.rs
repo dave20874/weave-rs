@@ -185,16 +185,24 @@ impl Mesh2D {
             *expanded_edges.get(&(p1, p2)).unwrap()
         }
         else {
+            // for 120 degree zag
+            let scale_r0 = 0.377964473;  // 1/sqrt(7)
+            let zig_angle = 0.33347;     // radians
+
+            // for 108 degree zag
+            // let scale_r0 = 0.40048;
+            // let zig_angle = 0.39071;
+
             // These points haven't been generated yet so generate them
             // println!("Computing mid points.");
             let p1_point = vertices[p1];
             let p2_point = vertices[p2];
             let r0 = (p2_point.x - p1_point.x).hypot(p2_point.y-p1_point.y);
             let theta0 = (p2_point.y-p1_point.y).atan2(p2_point.x-p1_point.x);
-            let r_segment = r0 * 0.377964473;  // 1/sqrt(7)
+            let r_segment = r0 * scale_r0;
 
-            let dx = r_segment*(theta0+0.33347).cos();
-            let dy = r_segment*(theta0+0.33347).sin();
+            let dx = r_segment*(theta0+zig_angle).cos();
+            let dy = r_segment*(theta0+zig_angle).sin();
 
             let p3x = p1_point.x + dx;
             let p3y = p1_point.y + dy;
